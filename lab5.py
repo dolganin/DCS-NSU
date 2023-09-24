@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import *
 from dsp import draw_plot, convolution_mult, convolution_fft, \
@@ -20,7 +19,7 @@ def task_1():
     lst_a = [signal, kernel_a, signal_conv_a]
     lst_b = [signal_amplified, kernel_b, signal_conv_b]
 
-    draw_plot(lst_a, lst_b, num_signals=3, spect_lims_y=True, ylims_spectrum=[0, 400], bars=False)
+    draw_plot(lst_a, lst_b, num_signals=3, ylims_spectrum=[0, 400], bars=False)
 
 
 
@@ -39,7 +38,7 @@ def task_2():
     lst_a = np.array(lst_a)
     lst_b = [signal_amplified, kernel_b, signal_conv_b]
 
-    draw_plot(lst_a, lst_b, num_signals=3, spect_lims_y=True, ylims_spectrum=[0, 400], bars=False)
+    draw_plot(lst_a, lst_b, num_signals=3, ylims_spectrum=[0, 400], bars=False)
 
 
 def task_3():
@@ -57,7 +56,7 @@ def task_3():
     lst_a = np.array(lst_a)
     lst_b = [signal_amplified, kernel_b, signal_conv_b]
 
-    draw_plot(lst_a, lst_b, num_signals=3, spect_lims_y=True, ylims_spectrum=[0, 400], bars=False)
+    draw_plot(lst_a, lst_b, num_signals=3, ylims_spectrum=[0, 400], bars=False)
 
 def task_4():
     discrete_freq = 100
@@ -77,7 +76,7 @@ def task_4():
     signals = [signal, blurred_cos_signal]
     spectrums = [spectrum, blurred_cos_spectrum]
 
-    draw_plot(signals, spectrums,fftfreq, num_signals=2, spect_lims_y=True, ylims_spectrum=[0, 100], spect_lims_x=True, xlims_spectrum=[-20, 20])
+    draw_plot(signals, spectrums,fftfreq, num_signals=2,  ylims_spectrum=[0, 100], xlims_spectrum=[-20, 20])
 
 
 

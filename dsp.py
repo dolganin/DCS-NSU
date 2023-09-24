@@ -5,8 +5,7 @@ from scipy.stats import norm
 from scipy.signal import find_peaks
 
 def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None, ylims_signal=None,
-              xlims_spectrum=None, ylims_spectrum=None, sign_lims_x=False, spect_lims_x=False,
-              sign_lims_y=False, spect_lims_y=False, bars=True):
+              xlims_spectrum=None, ylims_spectrum=None, bars=True):
     signals = np.array(signals)
     spectrums = np.array(spectrums)
 
@@ -19,9 +18,9 @@ def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None
     for i in range(lght):
         plt.subplot(lght, 2, (2 * i) + 1)
         plt.plot(signals[i])
-        if sign_lims_x:
+        if xlims_signal != None:
             plt.xlim(xlims_signal[0], xlims_signal[1])
-        if sign_lims_y:
+        if ylims_signal != None:
             plt.ylim(ylims_signal[0], ylims_signal[1])
 
         plt.subplot(lght, 2, (2 * i) + 2)
@@ -32,9 +31,9 @@ def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None
         else:
             plt.plot(fftfreq, np.abs(spectrums[i]))
 
-        if spect_lims_x:
+        if xlims_spectrum != None:
             plt.xlim(xlims_spectrum[0], xlims_spectrum[1])
-        if spect_lims_y:
+        if ylims_spectrum != None:
             plt.ylim(ylims_spectrum[0], ylims_spectrum[1])
 
     plt.tight_layout()
