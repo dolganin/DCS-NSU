@@ -211,3 +211,22 @@ def plank(eps, spectrum, N, low_freq, high_freq):
 
     return filtred_signal, filtred_spectrum
 
+def morle_wavelet(omega, time, alpha):
+    return np.exp(-time**2/alpha**2)*np.exp(2j*np.pi*time), alpha*np.sqrt(np.pi)*np.exp(-alpha**2*(2*np.pi-omega)**2/4)
+
+def mexico_hat_wavelet(time):
+    return (1-time**2)*np.exp(-time**2/2)
+
+def haare(x):
+    if x>=0 and x < 1/2:
+        x = 1
+    elif x>=1/2 and x<1:
+        x = -1
+    else:
+        x = 0
+    return x
+
+def haare_wavelet(time):
+    return list(map(haare, time))
+
+
