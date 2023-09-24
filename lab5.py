@@ -94,5 +94,6 @@ def task_5():
 
     draw_plot(signals, spectrums, fftfreq, num_signals=2)
 
+
+
 def task_6():
-    pass

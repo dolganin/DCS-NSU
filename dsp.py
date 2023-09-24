@@ -143,9 +143,6 @@ def gaussian_kernel(size, sigma):
             kernel[x + offset, y + offset] = np.exp(-(x ** 2 + y ** 2) / (2 * sigma ** 2))
     kernel /= np.sum(kernel)
     return kernel
-def bandpass_filter(signal, size, sigma_low, sigma_high):
-    return np.convolve(signal, gaussian_kernel(size, sigma_high).flatten(), mode='same') - \
-        np.convolve(signal, gaussian_kernel(size, sigma_low).flatten(), mode='same')
 
 
 def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
@@ -161,8 +158,10 @@ def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
     mask = int(np.max(spectrum)+np.min(spectrum)/np.max(filtered_spectrum))
 
     filtered_spectrum *= mask
-
     filtered_signal = np.fft.ifft(filtered_spectrum)
 
     return filtered_signal, filtered_spectrum, spectrum, freqs
+
+def low_pass_filter(signal, cutoff_freq, discrete_freq):
+    pass
 
