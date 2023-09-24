@@ -148,5 +148,21 @@ def bandpass_filter(signal, size, sigma_low, sigma_high):
         np.convolve(signal, gaussian_kernel(size, sigma_low).flatten(), mode='same')
 
 
+def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
+    freqs = np.fft.fftfreq(len(signal), 1 / discrete_freq)
 
+    mu = (freq_low + freq_high) / 2
+    sigma = (freq_high - freq_low) / 4
+    pdf = norm.pdf(freqs, mu, sigma)
+    spectrum = np.fft.fft(signal)
+
+    filtered_spectrum = spectrum*pdf
+
+    mask = int(np.max(spectrum)+np.min(spectrum)/np.max(filtered_spectrum))
+
+    filtered_spectrum *= mask
+
+    filtered_signal = np.fft.ifft(filtered_spectrum)
+
+    return filtered_signal, filtered_spectrum, spectrum, freqs
 
