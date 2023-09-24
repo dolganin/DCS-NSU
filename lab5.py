@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import *
 from dsp import draw_plot, convolution_mult, convolution_fft, \
-                gaussian_kernel, signal_generator, bandpass_normal_filter
+                gaussian_kernel, signal_generator, bandpass_normal_filter, low_pass_filter, \
+                plank
 
 
 def task_1():
@@ -87,8 +88,32 @@ def task_5():
     time = np.linspace(0, 1, discrete_freq)
 
     signal = signal_generator(frequencies, time)
+    fftfreq = np.fft.fftfreq(len(time), 1 / discrete_freq)
 
-    filtered_signal, filtred_spectrum, spectrum, fftfreq = bandpass_normal_filter(signal, 10, 30, discrete_freq)
+    filtered_signal_bandpass, filtred_spectrum_bandpass, spectrum, fftfreq = bandpass_normal_filter(signal, 10, 30, discrete_freq)
+    filtered_signal_lowpass, filtred_spectrum_lowpass, spectrum, fftfreq = low_pass_filter(signal, 50, discrete_freq)
+    signals = [signal, filtered_signal_bandpass, filtered_signal_lowpass]
+    spectrums = [spectrum, filtred_spectrum_bandpass, filtred_spectrum_lowpass]
+
+    draw_plot(signals, spectrums, fftfreq, num_signals=3)
+
+
+
+def task_6():
+    eps = 0.1
+    low_freq = 20
+    high_freq = 50
+    discrete_freq = 300
+    frequencies = [20, 50, 150]
+
+    time = np.linspace(0, 1, discrete_freq)
+
+    signal = signal_generator(frequencies, time)
+    spectrum = np.fft.fft(signal)
+    fftfreq = np.fft.fftfreq(len(time), 1 / discrete_freq)
+
+    filtered_signal, filtred_spectrum = plank(eps, spectrum, discrete_freq, low_freq, high_freq)
+
     signals = [signal, filtered_signal]
     spectrums = [spectrum, filtred_spectrum]
 
@@ -96,4 +121,24 @@ def task_5():
 
 
 
-def task_6():
+def task_7():
+    eps = 0.1
+    low_freq = 20
+    high_freq = 50
+    discrete_freq = 300
+    frequencies = [20, 50, 150]
+
+    time = np.linspace(0, 1, discrete_freq)
+
+    signal = signal_generator(frequencies, time)
+
+    signal += np.random.normal(size=signal.shape, loc=30, scale=3)/10
+    spectrum = np.fft.fft(signal)
+
+    filtred_plank_signal, filtred_plank_spectrum = plank(eps, spectrum, discrete_freq, 20, 50)
+    filtred_norm_signal, filtred_norm_spectrum, _, fftfreq = bandpass_normal_filter(signal, low_freq, high_freq, discrete_freq)
+
+    signals = [signal, filtred_norm_signal, filtred_plank_signal]
+    spectrums = [spectrum, filtred_norm_spectrum, filtred_plank_spectrum]
+
+    draw_plot(signals, spectrums, fftfreq, num_signals=3)

@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cmath
 from scipy.stats import norm
+from scipy.signal import find_peaks
 
 def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None, ylims_signal=None,
               xlims_spectrum=None, ylims_spectrum=None, sign_lims_x=False, spect_lims_x=False,
@@ -151,7 +152,7 @@ def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
     mu = (freq_low + freq_high) / 2
     sigma = (freq_high - freq_low) / 4
     pdf = norm.pdf(freqs, mu, sigma)
-    spectrum = np.fft.fft(signal)
+    spectrum = np.abs(np.fft.fft(signal))
 
     filtered_spectrum = spectrum*pdf
 
@@ -163,5 +164,50 @@ def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
     return filtered_signal, filtered_spectrum, spectrum, freqs
 
 def low_pass_filter(signal, cutoff_freq, discrete_freq):
-    pass
+
+    freqs = np.fft.fftfreq(len(signal), 1 / discrete_freq)
+
+    spectrum = np.abs(np.fft.fft(signal))
+
+    mu = (cutoff_freq) / 2
+    sigma = (cutoff_freq) / 4
+    pdf = norm.pdf(freqs, mu, sigma)
+
+    filtered_spectrum = spectrum * pdf
+
+    mask = int(np.max(spectrum) + np.min(spectrum) / np.max(filtered_spectrum))
+
+    filtered_spectrum *= mask
+
+    filtered_signal = np.fft.ifft(filtered_spectrum)
+
+    return filtered_signal, filtered_spectrum, spectrum, freqs
+
+def za(k, eps, N):
+    return eps * (N-1) * (1/k + 1/(k - eps*(N-1)))
+def zb(k, eps, N):
+    return eps * (N-1) * (1/(N-1-k) + 1/(-k + (1-eps)*(N-1)))
+def a(k, eps, N):
+    if k == 0 or k == N-1:
+        return 0
+    elif k < eps * (N-1):
+        return 1 / (np.exp(za(k, eps, N)) + 1)
+    elif k <= (1-eps) * (N-1):
+        return 1
+    elif k < N-1:
+        return 1 / (np.exp(zb(k, eps, N)) + 1)
+def plank(eps, spectrum, N, low_freq, high_freq):
+    plank = [a(k, eps, high_freq) for k in range(low_freq, high_freq)]
+    for i in range(N - high_freq):
+        plank.append(0)
+
+    temp_plank = np.zeros(len(spectrum))
+    temp_plank[low_freq:len(spectrum)] = plank
+    plank = temp_plank
+
+
+    filtred_spectrum = spectrum*plank
+    filtred_signal = np.fft.ifft(filtred_spectrum)
+
+    return filtred_signal, filtred_spectrum
 
