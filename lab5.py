@@ -2,10 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import *
 from dsp import draw_plot, convolution_mult, convolution_fft, \
-                gaussian_kernel, signal_generator, bandpass_filter, narrow_band_gaussian_filter
+                gaussian_kernel, signal_generator
 from scipy.stats import norm
-
-
 
 def task_1():
     time = np.linspace(0, 10, 3000) #Initializing values for signal proccessing
@@ -36,7 +34,6 @@ def task_2():
     signal_amplified = signal * 200
     signal_conv_b = np.abs(convolution_mult(signal_amplified, kernel_b))
 
-    print(len(signal_conv_b), len(signal_conv_a), len(signal))
     lst_a = [signal, kernel_a, signal_conv_a]
     lst_a = np.array(lst_a)
     lst_b = [signal_amplified, kernel_b, signal_conv_b]
@@ -82,15 +79,39 @@ def task_4():
     draw_plot(signals, spectrums,fftfreq, num_signals=2, spect_lims_y=True, ylims_spectrum=[0, 100], spect_lims_x=True, xlims_spectrum=[-20, 20])
 
 
+def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
+    sigma = (freq_low+freq_high)/4
+    loc = (freq_low+freq_high)/2
 
+    prop = (freq_low+freq_high)/np.pi
+    print(sigma, loc)
+
+    norm_samples = np.linspace(-1*prop*loc-5*loc, prop*loc, discrete_freq)
+    norm_distribution = norm.pdf(norm_samples, sigma, loc)
+    return norm_distribution
 def task_5():
-    discrete_freq = 100
-    time = np.linspace(0, 200, discrete_freq)
-    freqs = [20, 30, 40]
-    sigma = 20
-    loc = 25
+    discrete_freq = 300
+    x = []
+    plt.plot(bandpass_normal_filter(x, 50, 100, discrete_freq))
+    plt.xlim(xmin=120, xmax=190)
+    plt.show()
 
-def task_6():
+    """frequencies = [10, 25, 40]
+    signal = signal_generator(frequencies, time)
+
+    spectrum = np.fft.fft(signal)
+
+    filtred_spectrum = spectrum*norm_distribution
+
+    filtred_signal = np.fft.ifft(filtred_spectrum)
+
+    signals = [signal, filtred_signal]
+    spectrums = [spectrum, filtred_spectrum]
+
+    fftfreq = np.fft.fftfreq(len(time), 1 / discrete_freq)
+
+    draw_plot(signals, spectrums, fftfreq, num_signals=2, spect_lims_y=True, ylims_spectrum=[0, 20], spect_lims_x=True,
+              xlims_spectrum=[-100, 100])"""
 
 
 

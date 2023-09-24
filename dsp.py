@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import cmath
-from scipy.signal import convolve
+from scipy.stats import norm
 
 def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None, ylims_signal=None,
               xlims_spectrum=None, ylims_spectrum=None, sign_lims_x=False, spect_lims_x=False,
@@ -18,7 +18,6 @@ def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None
     for i in range(lght):
         plt.subplot(lght, 2, (2 * i) + 1)
         plt.plot(signals[i])
-        #plt.title('Signal ' + str(i + 1))
         if sign_lims_x:
             plt.xlim(xlims_signal[0], xlims_signal[1])
         if sign_lims_y:
@@ -32,7 +31,6 @@ def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None
         else:
             plt.plot(fftfreq, np.abs(spectrums[i]))
 
-        #plt.title('Spectrum ' + str(i + 1))
         if spect_lims_x:
             plt.xlim(xlims_spectrum[0], xlims_spectrum[1])
         if spect_lims_y:
@@ -137,7 +135,6 @@ def convolution_fft(signal1, signal2):
 
     return result
 
-
 def gaussian_kernel(size, sigma):
     offset = size // 2
     kernel = np.zeros((size, size))
@@ -150,38 +147,6 @@ def bandpass_filter(signal, size, sigma_low, sigma_high):
     return np.convolve(signal, gaussian_kernel(size, sigma_high).flatten(), mode='same') - \
         np.convolve(signal, gaussian_kernel(size, sigma_low).flatten(), mode='same')
 
-def narrow_band_gaussian_filter(signal, sigma, cutoff_frequency, sampling_rate):
-    """
-    Применяет узкополосный фильтр через ядро Гаусса к сигналу.
 
-    Args:
-        signal (array): Входной сигнал.
-        sigma (float): Стандартное отклонение Гауссова ядра.
-        cutoff_frequency (float): Частота среза фильтра (в Гц).
-        sampling_rate (float): Частота дискретизации сигнала (в Гц).
 
-    Returns:
-        filtered_signal (array): Отфильтрованный сигнал.
-    """
-    # Вычисляем размер Гауссова ядра
-    kernel_size = int(6 * sigma)
-    if kernel_size % 2 == 0:
-        kernel_size += 1
 
-    # Генерируем Гауссово ядро
-    t = np.linspace(-kernel_size / 2, kernel_size / 2, kernel_size)
-    kernel = np.exp(-t ** 2 / (2 * sigma ** 2))
-
-    # Нормализуем ядро
-    kernel /= np.sum(kernel)
-
-    # Вычисляем частотный сдвиг для узкополосного фильтра
-    shift = int(cutoff_frequency * kernel_size / sampling_rate)
-
-    # Выполняем свертку сигнала с Гауссовым ядром
-    filtered_signal = convolve(signal, kernel, mode='same')
-
-    # Вырезаем только узкополосную составляющую
-    filtered_signal = filtered_signal[shift:-shift]
-
-    return filtered_signal
