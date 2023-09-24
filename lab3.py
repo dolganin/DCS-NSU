@@ -12,7 +12,7 @@ def task_1():
     spectrum = np.fft.fft(signal)
     fftfreq = np.fft.fftfreq(len(time), 1/discrete_freq)
 
-    draw_plot(signal, spectrum, fftfreq, spect_lims_y=True, ylims_spectrum=[0, 400])
+    draw_plot(signal, spectrum, fftfreq,  ylims_spectrum=[0, 400])
 
 def task_2():
     time = np.linspace(0, 1, 1000)
@@ -85,8 +85,7 @@ def task_4():
 
     fftfreq = np.fft.fftfreq(len(time), 1 / 1000)
 
-    draw_plot(signals, spectrums, fftfreq, num_signals=len(signals), sign_lims_x=True, xlims_signal=[0, 400],
-              spect_lims_y=True, ylims_spectrum=[0, 500])
+    draw_plot(signals, spectrums, fftfreq, num_signals=len(signals), xlims_signal=[0, 400],  ylims_spectrum=[0, 500])
 
 
 def task_5_6():
@@ -116,8 +115,7 @@ def task_5_6():
     signals = [signal, signal_filter_3, signal_filter_4, signal_noise, signal_filter_3_noise, signal_filter_4_noise]
     spectrums = [spectrum, spectrum_3, spectrum_4, spectrum_noise, spectrum_3_noise, spectrum_4_noise]
 
-    draw_plot(signals, spectrums, fftfreq, num_signals=len(signals), sign_lims_x=True, xlims_signal=[0, 400],
-              spect_lims_y=True, ylims_spectrum=[0, 200])
+    draw_plot(signals, spectrums, fftfreq, num_signals=len(signals), xlims_signal=[0, 400], ylims_spectrum=[0, 200])
 
 def task_7():
 
@@ -136,6 +134,5 @@ def task_7():
     signals = [signal, filtred_signal]
     spectrum = [spectrum, filtred_spectrum]
 
-    draw_plot(signals, spectrum, fftfreq, num_signals=len(signals), spect_lims_x=True, xlims_spectrum=[-50, 50])
+    draw_plot(signals, spectrum, fftfreq, num_signals=len(signals), xlims_spectrum=[-50, 50])
 
-task_7()

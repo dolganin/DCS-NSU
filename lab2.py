@@ -1,4 +1,3 @@
-from scipy.signal import *
 import numpy as np
 from scipy.fft import fft, ifft
 import matplotlib.pyplot as plt
@@ -120,5 +119,3 @@ def hot_to_do_fft():
 
     fig.tight_layout()
     plt.show()
-
-hot_to_do_fft()
