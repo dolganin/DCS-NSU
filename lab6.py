@@ -62,4 +62,6 @@ def task_4():
     draw_plot(signals, spectrums, fftfreq, num_signals=3, xlims_spectrum=[-2.5, 2.5], ylims_spectrum=[0, 200])
 
 
-task_4()
+def task_5():
+    pass
+
