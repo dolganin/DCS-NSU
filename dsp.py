@@ -256,6 +256,11 @@ def gaussian_kernel(size, sigma):
     :param size: size of the kernel: int
     :param sigma: coefficient of blurring: float
     :return: kernel for blurring: list
+
+      ╱|、
+    (˚ˎ 。7
+    |、˜〵
+    じしˍ,)ノ
     """
     offset = size // 2
     kernel = np.zeros((size, size))
@@ -312,14 +317,18 @@ def plank(eps, spectrum, N, low_freq, high_freq):
     """
     It's something inside you... It's hard to explain...
 
+    This code implements difficult and huge in formulas algortithm of filtering signal. More details algorithm at
+    the "return" point.
 
-
-    :param eps:
-    :param spectrum:
-    :param N:
-    :param low_freq:
-    :param high_freq:
-    :return:
+    :param eps: this parameter defines steep slope of the cut.
+    /\      /\
+    | eps -> | slope.
+    :param spectrum: spectrum of the signal.
+    :param N: sampling rate of input signal (Notice: it equals lenght of list-signal): int
+    :param low_freq: this is a frequency where our filter starts: float
+    :param high_freq: and there our filter ends: float
+    :return: list with values according to the next rule: if spectrum[i] in [low_freq, high_freq] then plank[i]=value
+    else 0
     """
     def coefficient_a(k, eps, N):
         if k == 0 or k == N - 1:
@@ -338,15 +347,17 @@ def plank(eps, spectrum, N, low_freq, high_freq):
         return eps * (N - 1) * (1 / (N - 1 - k) + 1 / (-k + (1 - eps) * (N - 1)))
 
 
-    plank = [coefficient_a(k, eps, high_freq) for k in range(low_freq, high_freq)]
-    for i in range(N - high_freq):
-        plank.append(0)
+    result_plank = [coefficient_a(k, eps, high_freq) for k in range(low_freq, high_freq)]
+    for i in range(N - high_freq):  # We will fill array with zeros to get neccesary length of list.
+        result_plank.append(0)
 
-    temp_plank = np.zeros(len(spectrum))
-    temp_plank[low_freq:len(spectrum)] = plank
-    plank = temp_plank
+    temp_plank = np.zeros(len(spectrum))  # Also we need to paste some zeros in the beginning of array.
+    temp_plank[low_freq:len(spectrum)] = result_plank  # Paste plank coefficients.
+    result_plank = temp_plank
 
-    filtred_spectrum = spectrum * plank
+    filtred_spectrum = spectrum * result_plank  # Notice: result_plank = [0...0,1...1,0...0], and when we multiply,
+    # we got spectrum after filter
+
     filtred_signal = np.fft.ifft(filtred_spectrum)
 
     return filtred_signal, filtred_spectrum
@@ -354,7 +365,7 @@ def plank(eps, spectrum, N, low_freq, high_freq):
 
 def morle_wavelet(omega, time, alpha):
     """
-    Naive implementation of Morle's wavelet.
+    Naive implementation of Morle's wavelet. Just formula.
     :param omega: signal's harmonic's list: list
     :param time: list of values: list
     :param alpha: coefficient of scaling: float

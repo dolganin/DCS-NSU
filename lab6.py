@@ -1,5 +1,6 @@
 import numpy as np
 from dsp import signal_generator, morle_wavelet, draw_plot, mexico_hat_wavelet, haare_wavelet
+import matplotlib.pyplot as plt
 
 def task_1():
     alpha = 3
@@ -63,5 +64,24 @@ def task_4():
 
 
 def task_5():
-    pass
+    alpha = 3
+    discrete_freq = 300
+    frequencies = [1, 2, 4]
+    freq_wavelets = 10
+
+    time = np.linspace(0, 1, discrete_freq)
+    time_wavelet = np.linspace(-2, 2, freq_wavelets)
+    omega = np.linspace(-10, 10, discrete_freq)
+
+    signal = signal_generator(frequencies, time, np.sin)
+
+    morle, _ = morle_wavelet(omega, time_wavelet, alpha)
+    spectro_gram = np.convolve(signal, morle, mode='valid')
+
+    plt.specgram(spectro_gram, Fs=6, cmap="rainbow")
+    plt.show()
+
+def task_6():
+
+
 

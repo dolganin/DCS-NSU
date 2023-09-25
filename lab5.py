@@ -87,7 +87,6 @@ def task_5():
     time = np.linspace(0, 1, discrete_freq)
 
     signal = signal_generator(frequencies, time)
-    fftfreq = np.fft.fftfreq(len(time), 1 / discrete_freq)
 
     filtered_signal_bandpass, filtred_spectrum_bandpass, spectrum, fftfreq = bandpass_normal_filter(signal, 10, 30, discrete_freq)
     filtered_signal_lowpass, filtred_spectrum_lowpass, spectrum, fftfreq = low_pass_filter(signal, 50, discrete_freq)
