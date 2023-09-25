@@ -1,6 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import cmath
 from dsp import draw_plot, signal_generator, chebyshev_filter, \
      butterworth_filter, butterworth_filter_high, butterworth_filter_low
 

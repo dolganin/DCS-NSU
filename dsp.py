@@ -35,7 +35,7 @@ def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None
 
     for i in range(lght):
         plt.subplot(lght, 2, (2 * i) + 1)  # There we work on every even subplot.
-        plt.plot(signals[i])  # First, we plot our i-th signal in list
+        plt.plot(signals[i])  # First, we plot i-th signal in list.
         if xlims_signal is None:
             plt.xlim(xlims_signal[0], xlims_signal[1])  # Then we need to set x limits at this plot.
         if ylims_signal is None:
@@ -43,7 +43,8 @@ def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None
             # Notice: you need to understand that scale of a subplot commot to every subplot.
 
         plt.subplot(lght, 2, (2 * i) + 2)  # And there we work on every odd subplot.
-        if bars:  # IMO spectrum in bar looks more carefully. But we haven't to use always - you can choose this parameter.
+        if bars:  # IMO spectrum in bar looks more carefully. But we haven't to use
+                  # always - you can choose this parameter.
             plt.bar(fftfreq, np.abs(spectrums[i]))
         elif fftfreq is None:  # Same to the spectrums as the signals
             plt.plot(spectrums[i])
@@ -60,23 +61,30 @@ def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None
     return None
 
 
-def chebyshev_filter(order, ripple, cutoff_freq, signal):
+def chebyshev_filter(order, cutoff_freq, signal,  ripple=1):
     """
-    Naive implementation of Chebyshev filter with the first formula I've found in google.
-    :param order: this is a parameter of calculation's order.
-    :param ripple:
-    :param cutoff_freq:
-    :param signal:
-    :return:
+    Naive implementation of Chebyshev filter with the first formula I've found in google. The main specific of this
+    filter is that more steep cut on the AFD and there is a more wave-form in the signal before cut
+    :param order: this is a parameter of calculation's order(e.g. if order=20, then we calculate from 1 to 21 for
+    every sample): int.
+    :param ripple: there is a waveness which we need to implement in our signal, must be greater or equals zero, in default equals 1: float
+    :param cutoff_freq: there is a frequency where we are cut input signal (e.g. if we use signal with harmonics such as
+    [1,2,4] and cutoff_freq = 3, then we recieve a signal with harmonics [1, 2]: float
+    :param signal: signal which we need to filtrate
+    :return: filtered signal
     """
 
-    epsilon = np.sqrt(10 ** (0.1 * ripple) - 1)
-    v = np.arccosh((cmath.sqrt(10 ** (-0.1 * ripple) - 1)) / epsilon)
-    u = np.sinh(v / order)
-    a = np.sinh(v) / (order * u)
+    epsilon = np.sqrt(10 ** (0.1 * ripple) - 1)  # Notice: if ripple < 0 then we caught exception because of even
+                                                 # root from negative.
+    v = np.arccosh((cmath.sqrt(10 ** (-0.1 * ripple) - 1)) / epsilon)  # Poles in our task have to be complex value
+                                                                       # cmath calculates complex values.
+    u = np.sinh(v / order)   # Calculate the poles of our filter.
+    a = np.sinh(v) / (order * u)  # Notice: poles are points where our transfer function aspires to infinity.
 
     omega_cutoff = np.tan(np.pi * cutoff_freq)
-    z = np.exp(-1j * np.pi * np.arange(order + 1) / order)
+    z = np.exp(-1j * np.pi * np.arange(order + 1) / order)  # We will work with imaginary numbers,
+                                                            # so we took them in exponential form
+
     s = omega_cutoff * (z + 1) / (omega_cutoff * (z - 1) + epsilon)
 
     filtered_signal = np.zeros_like(signal)
@@ -89,6 +97,14 @@ def chebyshev_filter(order, ripple, cutoff_freq, signal):
 
 
 def butterworth_filter(signal, cutoff_freq, fs, order):
+    """
+
+    :param signal:
+    :param cutoff_freq:
+    :param fs:
+    :param order:
+    :return:
+    """
     nyquist_freq = fs / 2
     normalized_cutoff_freq = cutoff_freq / nyquist_freq
     poles = []
@@ -109,14 +125,33 @@ def butterworth_filter(signal, cutoff_freq, fs, order):
 
 
 def butterworth_filter_low(frequencies, cut_freq):
+    """
+
+    :param frequencies:
+    :param cut_freq:
+    :return:
+    """
     return [cut_freq ** 2 / (-freq ** 2j + np.sqrt(2) * cut_freq * freq + 1) for freq in frequencies]
 
 
 def butterworth_filter_high(frequencies, cut_freq):
+    """
+
+    :param frequencies:
+    :param cut_freq:
+    :return:
+    """
     return [freq ** 2 / (-cut_freq ** 2j + np.sqrt(2) * cut_freq * freq + 1) for freq in frequencies]
 
 
 def signal_generator(frequencies, time, summary_signal=True):
+    """
+
+    :param frequencies:
+    :param time:
+    :param summary_signal:
+    :return:
+    """
     if summary_signal:
         signal = sum([np.cos(frequencies[i] * 2 * np.pi * time) for i in range(len(frequencies))])
     else:
@@ -125,6 +160,10 @@ def signal_generator(frequencies, time, summary_signal=True):
 
 
 def fast_fourier_transform(x):
+    """
+    :param x: 
+    :return: 
+    """
     x = np.asarray(x)
     N = x.shape[0]
     if N <= 1:
@@ -136,6 +175,11 @@ def fast_fourier_transform(x):
 
 
 def discrete_fourier_transform(x):
+    """
+
+    :param x: 
+    :return: 
+    """
     x = np.asarray(x, dtype=float)
     N = x.shape[0]
     n = np.arange(N)
@@ -145,6 +189,13 @@ def discrete_fourier_transform(x):
 
 
 def convolution_mult(signal1, signal2):
+    """
+
+    :param signal1:
+    :param signal2:
+    :return:
+    """
+
     length = len(signal1)
     conv = [0] * length
 
@@ -156,6 +207,12 @@ def convolution_mult(signal1, signal2):
 
 
 def convolution_fft(signal1, signal2):
+    """
+
+    :param signal1:
+    :param signal2:
+    :return:
+    """
     conv_len = len(signal1)
 
     signal1_padded = np.pad(signal1, (0, conv_len - len(signal1)), 'constant')
@@ -167,6 +224,12 @@ def convolution_fft(signal1, signal2):
 
 
 def gaussian_kernel(size, sigma):
+    """
+
+    :param size:
+    :param sigma:
+    :return:
+    """
     offset = size // 2
     kernel = np.zeros((size, size))
     for x in range(-offset, offset + 1):
@@ -177,6 +240,14 @@ def gaussian_kernel(size, sigma):
 
 
 def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
+    """
+
+    :param signal:
+    :param freq_low:
+    :param freq_high:
+    :param discrete_freq:
+    :return:
+    """
     freqs = np.fft.fftfreq(len(signal), 1 / discrete_freq)
 
     mu = (freq_low + freq_high) / 2
@@ -195,6 +266,13 @@ def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
 
 
 def low_pass_filter(signal, cutoff_freq, discrete_freq):
+    """
+
+    :param signal:
+    :param cutoff_freq:
+    :param discrete_freq:
+    :return:
+    """
     freqs = np.fft.fftfreq(len(signal), 1 / discrete_freq)
 
     spectrum = np.abs(np.fft.fft(signal))
