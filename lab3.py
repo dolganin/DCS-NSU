@@ -65,10 +65,8 @@ def task_4():
     coefficients_high = np.abs(np.array(butterworth_filter_high(frequencies, cut_freq)))
     coefficients_low = np.abs(np.array(butterworth_filter_low(frequencies, cut_freq)))
 
-
     coefficients_threshold = coefficients_high * coefficients_low
     coefficients_block = coefficients_high + coefficients_low
-
 
     filtered_signal_threshold = (sum([np.abs(imag) * real for imag, real in zip(coefficients_threshold, signal)]))
     filtered_signal_block = (sum([np.abs(imag) * real for imag, real in zip(coefficients_block, signal)]))

@@ -66,12 +66,12 @@ def chebyshev_filter(order, cutoff_freq, signal,  ripple=1):
     Naive implementation of Chebyshev filter with the first formula I've found in google. The main specific of this
     filter is that more steep cut on the AFD and there is a more wave-form in the signal before cut
     :param order: this is a parameter of calculation's order(e.g. if order=20, then we calculate from 1 to 21 for
-    every sample): int.
+    every sample): int
     :param ripple: there is a waveness which we need to implement in our signal, must be greater or equals zero, in default equals 1: float
     :param cutoff_freq: there is a frequency where we are cut input signal (e.g. if we use signal with harmonics such as
     [1,2,4] and cutoff_freq = 3, then we recieve a signal with harmonics [1, 2]: float
-    :param signal: signal which we need to filtrate
-    :return: filtered signal
+    :param signal: signal which we need to filtrate: list
+    :return: signal after application filter: list
     """
 
     epsilon = np.sqrt(10 ** (0.1 * ripple) - 1)  # Notice: if ripple < 0 then we caught exception because of even
@@ -98,12 +98,14 @@ def chebyshev_filter(order, cutoff_freq, signal,  ripple=1):
 
 def butterworth_filter(signal, cutoff_freq, fs, order):
     """
-
-    :param signal:
-    :param cutoff_freq:
-    :param fs:
-    :param order:
-    :return:
+    Naive implementation of Butterworth filter.
+    :param signal: original signal: list
+    :param cutoff_freq: there is a frequency where we are cut input signal (e.g. if we use signal with harmonics such as
+    [1,2,4] and cutoff_freq = 3, then we recieve a signal with harmonics [1, 2]: float
+    :param fs: sampling rate of input signal (Notice: it equals lenght of list-signal): int
+    :param order: this is a parameter of calculation's order(e.g. if order=20, then we calculate from 1 to 21 for
+    every sample): int
+    :return: signal after application filter: list
     """
     nyquist_freq = fs / 2
     normalized_cutoff_freq = cutoff_freq / nyquist_freq
@@ -124,29 +126,44 @@ def butterworth_filter(signal, cutoff_freq, fs, order):
     return filtered_signal
 
 
-def butterworth_filter_low(frequencies, cut_freq):
+def butterworth_filter_low(frequencies, cutoff_freq):
     """
-
-    :param frequencies:
-    :param cut_freq:
-    :return:
+    Simple implementation of Butterworth lowpass filter. First of all, you need to decompose your signal into the
+    harmonic's list(e.g.:
+    signal = np.sin(2*time)+np.sin(4*time)+np.sin(8*time), then
+    harmonic_1 = 2
+    harmonic_2 = 4
+    ...
+    And so on.
+    Calculates the coefficients for signal's frequencies. You should multiply the result with your signal's harmonics then.
+    :param frequencies: list of harmonics: list
+    :param cutoff_freq: there is a frequency where we are cut input signal (e.g. if we use signal with harmonics such as
+    [1,2,4] and cutoff_freq = 3, then we recieve a signal with harmonics [1, 2]: float
+    :return: coefficiens for spectrum of signal: list
     """
-    return [cut_freq ** 2 / (-freq ** 2j + np.sqrt(2) * cut_freq * freq + 1) for freq in frequencies]
+    return [cutoff_freq ** 2 / (-freq ** 2j + np.sqrt(2) * cutoff_freq * freq + 1) for freq in frequencies]
 
 
-def butterworth_filter_high(frequencies, cut_freq):
+def butterworth_filter_high(frequencies, cutoff_freq):
     """
-
-    :param frequencies:
-    :param cut_freq:
-    :return:
+    Simple implementation of Butterworth lowpass filter. First of all, you need to decompose your signal into the
+    harmonic's list(e.g.:
+    signal = np.sin(2*time)+np.sin(4*time)+np.sin(8*time), then
+    harmonic_1 = 2
+    harmonic_2 = 4
+    ...
+    And so on.
+    Calculates the coefficients for signal's frequencies. You should multiply the result with your signal's harmonics then.
+    :param frequencies: list of harmonics: list
+    :param cutoff_freq: there is a frequency where we are cut input signal (e.g. if we use signal with harmonics such as
+    [1,2,4] and cutoff_freq = 3, then we recieve a signal with harmonics [4]: float
+    :return: coefficiens for spectrum of signal: list
     """
-    return [freq ** 2 / (-cut_freq ** 2j + np.sqrt(2) * cut_freq * freq + 1) for freq in frequencies]
+    return [freq ** 2 / (-cutoff_freq ** 2j + np.sqrt(2) * cutoff_freq * freq + 1) for freq in frequencies]
 
 
 def signal_generator(frequencies, time, summary_signal=True):
     """
-
     :param frequencies:
     :param time:
     :param summary_signal:
