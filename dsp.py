@@ -107,18 +107,19 @@ def butterworth_filter(signal, cutoff_freq, fs, order):
     every sample): int
     :return: signal after application filter: list
     """
-    nyquist_freq = fs / 2
+    nyquist_freq = fs / 2  # By the Kotelknikov's theorem.
     normalized_cutoff_freq = cutoff_freq / nyquist_freq
-    poles = []
+    poles = []  # To this list we will append poles of Butterworth filter.
     for k in range(1, order + 1):
-        real = -np.cos((2 * k + order - 1) * np.pi / (2 * order))
-        imag = np.sin((2 * k + order - 1) * np.pi / (2 * order))
+        real = -np.cos((2 * k + order - 1) * np.pi / (2 * order))  # Generate coefficients for poles
+        imag = np.sin((2 * k + order - 1) * np.pi / (2 * order))  # to work with complex values.
         poles.append(complex(real, imag))
     normalized_poles = []
     for pole in poles:
-        normalized_poles.append(pole * normalized_cutoff_freq)
-    filtered_signal = [0] * len(signal)
-    for i in range(len(signal)):
+        normalized_poles.append(pole * normalized_cutoff_freq)  # Normalize poles with using normalized frequency
+    filtered_signal = np.zeros(len(signal))
+    for i in range(len(signal)):  # For every element from original signal we copy them to zeros-array and
+        # then -/+ real and imaginary part of calculations.
         filtered_signal[i] = signal[i]
         for pole in normalized_poles:
             filtered_signal[i] -= pole.real * filtered_signal[i - 1].real
@@ -162,40 +163,48 @@ def butterworth_filter_high(frequencies, cutoff_freq):
     return [freq ** 2 / (-cutoff_freq ** 2j + np.sqrt(2) * cutoff_freq * freq + 1) for freq in frequencies]
 
 
-def signal_generator(frequencies, time, summary_signal=True):
+def signal_generator(frequencies, time, summary_signal=True, signal_function=np.cos):
     """
-    :param frequencies:
-    :param time:
-    :param summary_signal:
-    :return:
+    Because of permanently using of signal_generating, implement this function.
+    :param frequencies: harmonics of your signal: list
+    :param time: linspace to apply functions with harmonics
+    :param summary_signal: if False then we will recieve n lists of signal, else only one list: [[]]
+    :param signal_function: you may take a signal with any functions. In default = cos, but you can cnage, for exmaple,
+    sin.
+    :return: list of lists or list, representing a signal.
     """
-    if summary_signal:
-        signal = sum([np.cos(frequencies[i] * 2 * np.pi * time) for i in range(len(frequencies))])
-    else:
-        signal = [np.cos(frequencies[i] * 2 * np.pi * time) for i in range(len(frequencies))]
+    if summary_signal:  # If true then there is only one list.
+        signal = sum([signal_function(frequencies[i] * 2 * np.pi * time) for i in range(len(frequencies))])  # Generate
+        # sequence of signals with different harmonics and summarize it.
+    else:  # Else we gain list of lists.
+        signal = [signal_function(frequencies[i] * 2 * np.pi * time) for i in range(len(frequencies))]
     return signal
 
 
 def fast_fourier_transform(x):
     """
-    :param x: 
-    :return: 
+    Standard algorithm FFT.
+    Notice: work only on sequences, which lenght equals one of the power of 2 (e.g. 2, 4, 8...1024...)
+    This trick is based on fact that Spectrum is symmetrical and we can calculate only every 2-th frequency there to
+    get spectrum.
+    :param x: original signal: list
+    :return: spectrum of signal
     """
-    x = np.asarray(x)
+    x = np.asarray(x)  # We will work with x as array (it can be list).
     N = x.shape[0]
     if N <= 1:
         return x
-    even = fast_fourier_transform(x[::2])
-    odd = fast_fourier_transform(x[1::2])
+    even = fast_fourier_transform(x[::2])  # Recursive call for evens and odds.
+    odd = fast_fourier_transform(x[1::2])  #
     T = [np.exp(-2j * np.pi * k / N) * odd[k] for k in range(N // 2)]
     return [even[k] + T[k] for k in range(N // 2)] + [even[k] - T[k] for k in range(N // 2)]
 
 
 def discrete_fourier_transform(x):
     """
-
-    :param x: 
-    :return: 
+    Naive implementaion of Fourier Transform in values.
+    :param x: original signal: list
+    :return: spectrum of signal
     """
     x = np.asarray(x, dtype=float)
     N = x.shape[0]
@@ -207,28 +216,28 @@ def discrete_fourier_transform(x):
 
 def convolution_mult(signal1, signal2):
     """
-
-    :param signal1:
-    :param signal2:
-    :return:
+    Intuitive algorithm of mixing two signals.
+    Notice: signal1 and signal2 must be one shape.
+    :param signal1: list
+    :param signal2: list
+    :return: conved signal
     """
 
-    length = len(signal1)
-    conv = [0] * length
+    conv = np.zeros(len(signal1))  # Initialize zeros-array with length equals to signals.
 
-    for i in range(length):
-        for j in range(length):
-            conv[i] += signal1[j] * signal2[i - j]
-
+    for i in range(len(signal1)):
+        for j in range(len(signal1)):
+            conv[i] += signal1[j] * signal2[i - j]  # Naive and 1-dimensional convolution.
     return conv
 
 
 def convolution_fft(signal1, signal2):
     """
-
-    :param signal1:
-    :param signal2:
-    :return:
+    Because of theorem about FFT, we gain that convolution of two signals in time domain equals to
+    multiply in frequency domain
+    :param signal1: list
+    :param signal2: list
+    :return: conved_signal
     """
     conv_len = len(signal1)
 
@@ -242,10 +251,11 @@ def convolution_fft(signal1, signal2):
 
 def gaussian_kernel(size, sigma):
     """
-
-    :param size:
-    :param sigma:
-    :return:
+    Implementation of gaussian's kernel for CV, but it is only 1-dimensional. Performing a blurring
+    above the signal.
+    :param size: size of the kernel: int
+    :param sigma: coefficient of blurring: float
+    :return: kernel for blurring: list
     """
     offset = size // 2
     kernel = np.zeros((size, size))
@@ -258,23 +268,27 @@ def gaussian_kernel(size, sigma):
 
 def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
     """
-
-    :param signal:
-    :param freq_low:
-    :param freq_high:
-    :param discrete_freq:
-    :return:
+    There is a intresting idea: let's use a normal distribution to filter signal. How? We can define spread of
+    these distribution with parameter root-mean-square deviation and the middle of distributuion is on the expectation.
+    Then we multiply these with spectrum of our signal and perform the inverse fast fourier transform.
+    :param signal: original signal: list
+    :param freq_low: this is a frequency where our filter starts: float
+    :param freq_high: and there our filter ends: float
+    :param discrete_freq: sampling rate of input signal (Notice: it equals lenght of list-signal): int
+    :return: signal after performing filtering, spectrum after performing filtering, spectrum of original signal and frequency
+    to define height of bars on the plot for spectrum
     """
-    freqs = np.fft.fftfreq(len(signal), 1 / discrete_freq)
+    freqs = np.fft.fftfreq(len(signal), 1 / discrete_freq)  # Calculate frequency to plot heights.
 
-    mu = (freq_low + freq_high) / 2
-    sigma = (freq_high - freq_low) / 4
-    pdf = norm.pdf(freqs, mu, sigma)
+    mu = (freq_low + freq_high) / 2  # Calculate expecation in the following consideration
+    sigma = (freq_high - freq_low) / 4  # Calcultate the root-mean-square deviation.
+    pdf = norm.pdf(freqs, mu, sigma)  # Build the distribution.
     spectrum = np.abs(np.fft.fft(signal))
 
     filtered_spectrum = spectrum * pdf
 
-    mask = int(np.max(spectrum) + np.min(spectrum) / np.max(filtered_spectrum))
+    mask = int(np.max(spectrum) + np.min(spectrum) / np.max(filtered_spectrum))  # This is variale of scaling. Our
+    # signal will be decreased by multiplying with normal distribution, so we need to increase it backward.
 
     filtered_spectrum *= mask
     filtered_signal = np.fft.ifft(filtered_spectrum)
@@ -284,52 +298,47 @@ def bandpass_normal_filter(signal, freq_low, freq_high, discrete_freq):
 
 def low_pass_filter(signal, cutoff_freq, discrete_freq):
     """
-
-    :param signal:
-    :param cutoff_freq:
-    :param discrete_freq:
-    :return:
+    Inspired by bandpass_normal_filter (look the upper function). If we use as lower bound zero and cutoff_freq as
+    upper bound, we clip the signal in these points.
+    :param signal: list
+    :param cutoff_freq: there is a frequency where we are cut input signal (e.g. if we use signal with harmonics such as
+    [1,2,4] and cutoff_freq = 3, then we recieve a signal with harmonics [1, 2]: float
+    :param discrete_freq: sampling rate of input signal (Notice: it equals lenght of list-signal): int
+    :return: filtred signal without harmonics >= cutoff_freq
     """
-    freqs = np.fft.fftfreq(len(signal), 1 / discrete_freq)
-
-    spectrum = np.abs(np.fft.fft(signal))
-
-    mu = (cutoff_freq) / 2
-    sigma = (cutoff_freq) / 4
-    pdf = norm.pdf(freqs, mu, sigma)
-
-    filtered_spectrum = spectrum * pdf
-
-    mask = int(np.max(spectrum) + np.min(spectrum) / np.max(filtered_spectrum))
-
-    filtered_spectrum *= mask
-
-    filtered_signal = np.fft.ifft(filtered_spectrum)
-
-    return filtered_signal, filtered_spectrum, spectrum, freqs
-
-
-def za(k, eps, N):
-    return eps * (N - 1) * (1 / k + 1 / (k - eps * (N - 1)))
-
-
-def zb(k, eps, N):
-    return eps * (N - 1) * (1 / (N - 1 - k) + 1 / (-k + (1 - eps) * (N - 1)))
-
-
-def a(k, eps, N):
-    if k == 0 or k == N - 1:
-        return 0
-    elif k < eps * (N - 1):
-        return 1 / (np.exp(za(k, eps, N)) + 1)
-    elif k <= (1 - eps) * (N - 1):
-        return 1
-    elif k < N - 1:
-        return 1 / (np.exp(zb(k, eps, N)) + 1)
-
+    return bandpass_normal_filter(signal, 0, cutoff_freq, discrete_freq)
 
 def plank(eps, spectrum, N, low_freq, high_freq):
-    plank = [a(k, eps, high_freq) for k in range(low_freq, high_freq)]
+    """
+    It's something inside you... It's hard to explain...
+
+
+
+    :param eps:
+    :param spectrum:
+    :param N:
+    :param low_freq:
+    :param high_freq:
+    :return:
+    """
+    def coefficient_a(k, eps, N):
+        if k == 0 or k == N - 1:
+            return 0
+        elif k < eps * (N - 1):
+            return 1 / (np.exp(coefficient_za(k, eps, N)) + 1)
+        elif k <= (1 - eps) * (N - 1):
+            return 1
+        elif k < N - 1:
+            return 1 / (np.exp(coefficient_zb(k, eps, N)) + 1)
+
+    def coefficient_za(k, eps, N):
+        return eps * (N - 1) * (1 / k + 1 / (k - eps * (N - 1)))
+
+    def coefficient_zb(k, eps, N):
+        return eps * (N - 1) * (1 / (N - 1 - k) + 1 / (-k + (1 - eps) * (N - 1)))
+
+
+    plank = [coefficient_a(k, eps, high_freq) for k in range(low_freq, high_freq)]
     for i in range(N - high_freq):
         plank.append(0)
 
@@ -344,15 +353,50 @@ def plank(eps, spectrum, N, low_freq, high_freq):
 
 
 def morle_wavelet(omega, time, alpha):
+    """
+    Naive implementation of Morle's wavelet.
+    :param omega: signal's harmonic's list: list
+    :param time: list of values: list
+    :param alpha: coefficient of scaling: float
+    :return: filtred_signal, filtred_spectrum
+    """
     return np.exp(-time ** 2 / alpha ** 2) * np.exp(2j * np.pi * time), alpha * np.sqrt(np.pi) * np.exp(
         -alpha ** 2 * (2 * np.pi - omega) ** 2 / 4)
 
 
 def mexico_hat_wavelet(time):
+    """
+              .~
+              ^^.
+              ^.:
+             .: ^
+..........   :. ^.  ..........
+..........:. ^  :: ::.........
+           ::^   ^^:
+            .    ..
+    :param time: list
+    :return: result: list
+    """
     return (1 - time ** 2) * np.exp(-time ** 2 / 2)
 
 
 def haare(x):
+    """
+    :::::::::::.
+    :         .:
+    :          :
+    :          :
+    :          :
+....:          :          ....
+.....          :         .:...
+               :         ..
+               :         ..
+               :         ..
+               :         .:
+               :::::::::::.
+    :param x: value: float
+    :return: result: float
+    """
     if x >= 0 and x < 1 / 2:
         x = 1
     elif x >= 1 / 2 and x < 1:
