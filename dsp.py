@@ -36,9 +36,9 @@ def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None
     for i in range(lght):
         plt.subplot(lght, 2, (2 * i) + 1)  # There we work on every even subplot.
         plt.plot(signals[i])  # First, we plot i-th signal in list.
-        if xlims_signal is None:
+        if xlims_signal is not None:
             plt.xlim(xlims_signal[0], xlims_signal[1])  # Then we need to set x limits at this plot.
-        if ylims_signal is None:
+        if ylims_signal is not None:
             plt.ylim(ylims_signal[0], ylims_signal[1])  # Then we need to set x limits at this plot.
             # Notice: you need to understand that scale of a subplot commot to every subplot.
 
@@ -51,9 +51,9 @@ def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None
         else:
             plt.plot(fftfreq, np.abs(spectrums[i]))
 
-        if xlims_spectrum is None:
+        if xlims_spectrum is not None:
             plt.xlim(xlims_spectrum[0], xlims_spectrum[1])
-        if ylims_spectrum is None:
+        if ylims_spectrum is not None:
             plt.ylim(ylims_spectrum[0], ylims_spectrum[1])
 
     plt.tight_layout()  # These will automatically relocate subplots to reach the most effectivenely location.
@@ -227,7 +227,7 @@ def convolution_mult(signal1, signal2):
 
     for i in range(len(signal1)):
         for j in range(len(signal1)):
-            conv[i] += signal1[j] * signal2[i - j]  # Naive and 1-dimensional convolution.
+            conv[i] += signal1[j] * signal2[j-i]  # Naive and 1-dimensional convolution.
     return conv
 
 
@@ -239,14 +239,18 @@ def convolution_fft(signal1, signal2):
     :param signal2: list
     :return: conved_signal
     """
-    conv_len = len(signal1)
+    # Вычисление длины итогового сигнала
+    n = len(signal1)
+    # Выполнение FFT для сигналов
+    fft_signal1 = np.fft.fft(signal1, n)
+    fft_signal2 = np.fft.fft(signal2, n)
+    # Умножение в частотной области
+    fft_result = fft_signal1 * fft_signal2
+    # Обратное FFT для получения итогового сигнала
+    conv_result = np.real(np.fft.ifft(fft_result))
 
-    signal1_padded = np.pad(signal1, (0, conv_len - len(signal1)), 'constant')
-    signal2_padded = np.pad(signal2, (0, conv_len - len(signal2)), 'constant')
+    return conv_result
 
-    result = np.fft.ifft(np.fft.fft(signal1_padded) * np.fft.fft(signal2_padded))
-
-    return result
 
 
 def gaussian_kernel(size, sigma):
@@ -363,7 +367,7 @@ def plank(eps, spectrum, N, low_freq, high_freq):
     return filtred_signal, filtred_spectrum
 
 
-def morle_wavelet(omega, time, alpha):
+def morle_wavelet(omega, time, alpha=1):
     """
     Naive implementation of Morle's wavelet. Just formula.
     :param omega: signal's harmonic's list: list
@@ -419,3 +423,83 @@ def haare(x):
 
 def haare_wavelet(time):
     return list(map(haare, time))
+
+
+def find_half_max(signal):
+    max_amplitude = np.max(signal)
+    half_max = max_amplitude / 2
+    indices = np.where(signal >= half_max)[0]
+
+    first_index = indices[0]
+    last_index = indices[-1]
+
+    if len(indices) % 2 == 0:
+        # если количество индексов четное, берем среднее двух соседних индексов для более точного результата
+        first_index -= 1
+        last_index += 1
+
+    return last_index - first_index
+
+
+def calc_fwhm(signal):
+    first_index, last_index = find_half_max(signal)
+    fwhm = last_index - first_index
+    return fwhm
+
+
+def welve(t, alpha=1):
+    return np.exp((-t**2)/alpha**2)*np.exp(1j*2*np.pi*t)
+
+
+def averaging_signal_linear(signal):
+    k = int(0.01*len(signal))
+    new_signal = [1/(2*k+1)*sum(signal[i:i+k]) for i in range(len(signal))]
+    return new_signal
+
+def averaging_signal_quad(signal, time):
+    w = find_half_max(signal)
+    g = np.exp([-4*cmath.log(2, np.e)*t/w**2 for t in time])
+
+    k = int(0.01*len(signal))
+    new_signal = [sum(signal[i:i + k]*g[i:i+k]) for i in range(len(signal))]
+    return new_signal
+
+def median_filter(signal, window_size):
+    filtered_signal = []
+    padding = (window_size - 1) // 2
+    for i in range(padding, len(signal) - padding):
+        window = signal[i - padding:i + padding + 1]
+        sorted_window = sorted(window)
+        median = sorted_window[len(sorted_window) // 2]
+        filtered_signal.append(median)
+    return filtered_signal
+
+def spectrum_interpolation(signal, time):
+    signal[time[0]:time[1]] = np.zeros(time[1]-time[0])
+
+    window_duration = time[1]-time[0]
+
+    window_1 = signal[time[0]-window_duration:time[0]]
+    window_2 = signal[time[1]:time[1]+window_duration]
+
+    window_1_spect = np.fft.fft(window_1)
+    window_2_spect = np.fft.fft(window_2)
+
+    window_middle = (window_1_spect+window_2_spect)/2
+    middle_signal = np.real(np.fft.ifft(window_middle))
+    signal[time[0]:time[1]] = middle_signal
+
+    return signal
+
+def discrease_sampling(signal, freqs, n=2, sum_signal=True):
+
+    new_nyiquist = len(signal)/2*n
+    coefficients = butterworth_filter_low(freqs, new_nyiquist)
+    if sum_signal:
+        filtered_signal = (sum([np.abs(imag) * real for imag, real in zip(coefficients, signal)]))
+    else:
+        filtered_signal = [np.abs(imag) * real for imag, real in zip(coefficients, signal)]
+    return filtered_signal
+
+
+

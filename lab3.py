@@ -130,5 +130,6 @@ def task_7():
     signals = [signal, filtred_signal]
     spectrum = [spectrum, filtred_spectrum]
 
-    draw_plot(signals, spectrum, fftfreq, num_signals=len(signals), xlims_spectrum=[-50, 50])
+    draw_plot(signals, spectrum, fftfreq, num_signals=len(signals), xlims_spectrum=[-50, 50], xlims_signal=[0, 400])
 
+task_7()

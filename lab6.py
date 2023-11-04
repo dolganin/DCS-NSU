@@ -1,6 +1,8 @@
 import numpy as np
-from dsp import signal_generator, morle_wavelet, draw_plot, mexico_hat_wavelet, haare_wavelet
+from dsp import signal_generator, morle_wavelet, draw_plot, mexico_hat_wavelet, haare_wavelet, welve
 import matplotlib.pyplot as plt
+import scipy
+import scipy.io as sio
 
 def task_1():
     alpha = 3
@@ -66,22 +68,58 @@ def task_4():
 def task_5():
     alpha = 3
     discrete_freq = 300
-    frequencies = [1, 2, 4]
+    frequencies = [25, 50, 75]
     freq_wavelets = 10
 
     time = np.linspace(0, 1, discrete_freq)
     time_wavelet = np.linspace(-2, 2, freq_wavelets)
     omega = np.linspace(-10, 10, discrete_freq)
 
-    signal = signal_generator(frequencies, time, np.sin)
+    signal = signal_generator(frequencies, time, np.cos)
 
     morle, _ = morle_wavelet(omega, time_wavelet, alpha)
-    spectro_gram = np.convolve(signal, morle, mode='valid')
+    spectro_gram = np.convolve(signal, morle, mode='same')
 
-    plt.specgram(spectro_gram, Fs=6, cmap="rainbow")
+    plt.specgram(spectro_gram, Fs=discrete_freq, cmap="inferno", scale_by_freq=True, mode='magnitude', detrend='linear',
+                 sides='onesided')
     plt.show()
 
-def task_6():
+def task_6_7():
 
+    braindat = sio.loadmat(r'data/Lab6_Data.mat')
+    time_vec = braindat['timevec'][0]
+    s_rate = braindat['srate'][0]
+    data = braindat['data'][0]
+
+    discrete_freq = 50
+
+    signal = np.linspace(8, 70, discrete_freq)
+    time = np.arange(-2, 2, 1 / s_rate)
+
+    y = ([welve(t) for t in time_vec])
+    y = np.convolve(data, y)
+
+    lst_signal = []
+
+    for cnt in range(discrete_freq):
+        lst_signal.append(np.exp(1j * 2 * np.pi * signal[cnt] * time) * np.exp(-(4 * np.log(2) * time ** 2) / 0.2 ** 2))
+
+    dataX = scipy.fftpack.fft(y, len(time_vec) + len(time) - 1)
+
+    tf = []
+
+    for sign in lst_signal:
+        waveX = scipy.fftpack.fft(sign, len(time_vec) + len(time) - 1)
+        waveX = waveX / np.max(waveX)
+
+        conv_res = scipy.fftpack.ifft(waveX * dataX)
+        conv_res = conv_res[len(time) // 2 - 1: -len(time) // 2]
+        tf.append(np.abs(conv_res) ** 2)
+
+    plt.pcolormesh(time_vec, signal, tf, vmin=0, vmax=1e3, cmap='gist_heat')
+    plt.show()
+
+
+task_6_7()
 
 
