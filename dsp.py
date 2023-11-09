@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cmath
 from scipy.stats import norm
-
+import scipy.integrate as integrate
+from scipy.integrate import quad, nquad
 
 def draw_plot(signals, spectrums, fftfreq=None, num_signals=1, xlims_signal=None, ylims_signal=None,
               xlims_spectrum=None, ylims_spectrum=None, bars=True):
@@ -500,6 +501,65 @@ def discrease_sampling(signal, freqs, n=2, sum_signal=True):
     else:
         filtered_signal = [np.abs(imag) * real for imag, real in zip(coefficients, signal)]
     return filtered_signal
+
+def quadro_method(K,f,a,b,h):
+    x=np.arange (a, b, h)
+    x=x.reshape(len(x),1)
+    n=len(x)
+    wt=1/2
+    wj=1
+    A=np.zeros((n, n))
+    for i in range(n):
+        A[i][0]=-h*wt*K(x[i],x[0])
+        for j in range(1,n-1,1):
+            A[i][j]= -h*wj*K(x[i],x[j])
+        A[i][n-1]= -h*wt*K(x[i],x[n-1])
+        A[i][i]= A[i][i]+ 1
+    B = np.zeros((n,1))
+    for j in range(n):
+        B[j][0] = f(x[j])
+    y=np.linalg.solve(A, B)
+    return y
+
+
+alpha = lambda t: [-t,t, t**2, t**3, t**4]
+beta= lambda t: [1 , 1, t, 0.5*t**2, 1/6*t**3]
+
+def bfun(t,m,f):
+    return beta(t)[m]*f(t)
+
+def Aijfun(t,m,k):
+    return beta(t)[m]*alpha(t)[k]
+
+def kernel_approx(a, b, f,t,Lambda):
+    m=len(alpha(0)) # определяем размер alpha
+    M=np.zeros((m,m))
+    r=np.zeros((m,1))
+
+    for i in range(m):
+        r[i]=integrate.quad(bfun, a, b,args=(i,f))[0]
+        for j in range(m):
+            M[i][j]=-Lambda*integrate.quad(Aijfun, a, b,args=(i,j))[0]
+
+
+    for i in range(m):
+        M[i][i] =M[i][i]+1
+
+
+    c=np.linalg.solve(M, r)
+    aij = np.array(alpha(t))
+
+    return Lambda*(np.sum(c[:,np.newaxis]*aij,axis=0))+f(t)
+
+def galkin_petrov(b, a, psi, K, f, lam, phi):
+    for i in range(2):
+        b[i] = lam * quad(lambda x: psi[i](x) * quad(lambda s: K(x, s) * f(s), -1.001, 1.001)[0], -1.001, 1.001)[0]
+        for j in range(2):
+            a[i][j] = quad(lambda x: phi[i](x) * psi[j](x), -1.001, 1.001)[0] - lam * \
+                      quad(lambda x: psi[i](x) * quad(lambda s: K(x, s) * phi[j](s), -1.001, 1.001)[0], -1.001, 1.001)[
+                          0]
+
+    return a, b
 
 
 

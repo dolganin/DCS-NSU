@@ -3,6 +3,8 @@ from dsp import signal_generator, morle_wavelet, draw_plot, mexico_hat_wavelet, 
 import matplotlib.pyplot as plt
 import scipy
 import scipy.io as sio
+import librosa
+import librosa.display
 
 def task_1():
     alpha = 3
@@ -84,7 +86,7 @@ def task_5():
                  sides='onesided')
     plt.show()
 
-def task_6_7():
+def task_7():
 
     braindat = sio.loadmat(r'data/Lab6_Data.mat')
     time_vec = braindat['timevec'][0]
@@ -119,7 +121,20 @@ def task_6_7():
     plt.pcolormesh(time_vec, signal, tf, vmin=0, vmax=1e3, cmap='gist_heat')
     plt.show()
 
+def task_6():
+    y, sr = librosa.load('data/Rick_Astley_-_Never_Gonna_Give_You_Up_47958276.mp3')
 
-task_6_7()
+    spec = librosa.feature.melspectrogram(y=y, sr=sr)
+
+    spec_db = librosa.power_to_db(spec, ref=np.max)
+
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+    img = librosa.display.specshow(spec_db, x_axis='time', y_axis='mel', ax=ax)
+    fig.colorbar(img, ax=ax, format='%+2.0f dB')
+    ax.set_title('Spectrogram')
+    plt.show()
+
+
+task_6()
 
 
